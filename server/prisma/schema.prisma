@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  role      Role
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  admin
+  teacher
+  student
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  subjects  Subject[]
+}
+
+model Subject {
+  id          String           @id @default(uuid())
+  name        String
+  category    Category         @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  teacherSubjects TeacherSubject[]
+}
+
+model Teacher {
+  id         String           @id @default(uuid())
+  firstName  String
+  lastName   String
+  photo      String?
+  aboutShort String?
+  aboutFull  String?
+  education  String?
+  experience String?
+  isActive   Boolean          @default(true)
+  sortOrder  Int              @default(0)
+  teacherSubjects TeacherSubject[]
+}
+
+model TeacherSubject {
+  id         String   @id @default(uuid())
+  teacher    Teacher  @relation(fields: [teacherId], references: [id])
+  teacherId  String
+  subject    Subject  @relation(fields: [subjectId], references: [id])
+  subjectId  String
+  price      Int
+  duration   Int // в минутах
+}

@@ -1,0 +1,252 @@
+"use client"
+import { useState, useEffect } from "react"
+import Link from "next/link"
+
+type Teacher = {
+  id: string
+  firstName: string
+  lastName: string
+  aboutShort?: string
+  education?: string
+}
+type Subject = { id: string; name: string }
+type TeacherSubject = { id?: string; subjectId: string; price: string; duration: string }
+
+export default function TeachersAdminPage() {
+  const [teachers, setTeachers] = useState<Teacher[]>([])
+  const [editing, setEditing] = useState<Teacher | null>(null)
+  const [form, setForm] = useState<Teacher>({ firstName: "", lastName: "", aboutShort: "", education: "" })
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [teacherSubjects, setTeacherSubjects] = useState<TeacherSubject[]>([])
+  const [loading, setLoading] = useState(false)
+
+  // Загрузка данных
+  useEffect(() => {
+    fetch("/api/teachers").then(r => r.json()).then(setTeachers)
+    fetch("/api/subjects").then(r => r.json()).then(setSubjects)
+  }, [])
+
+  // Редактировать преподавателя
+  const startEdit = async (teacher: Teacher) => {
+    setEditing(teacher)
+    setForm(teacher)
+    // Грузим TeacherSubjects (с учетом нового названия связи)
+    const resp = await fetch(`/api/teacher-subjects?teacherId=${teacher.id}`)
+    const ts = await resp.json()
+    setTeacherSubjects(ts.map((t: any) => ({
+      id: t.id,
+      subjectId: t.subjectId,
+      price: t.price?.toString() ?? "",
+      duration: t.duration?.toString() ?? "",
+    })))
+  }
+
+  // Новый преподаватель
+  const startNew = () => {
+    setEditing(null)
+    setForm({ firstName: "", lastName: "", aboutShort: "", education: "" })
+    setTeacherSubjects([])
+  }
+
+  // Выбор предмета
+  const handleSubjectChange = (subjectId: string, checked: boolean) => {
+    setTeacherSubjects(ts => {
+      if (checked) return [...ts, { subjectId, price: "", duration: "" }]
+      else return ts.filter(s => s.subjectId !== subjectId)
+    })
+  }
+
+  // Изменение цены/длительности
+  const updateTS = (subjectId: string, field: "price" | "duration", value: string) => {
+    setTeacherSubjects(ts =>
+      ts.map(s => s.subjectId === subjectId ? { ...s, [field]: value } : s)
+    )
+  }
+
+  // Сохранение (создать или обновить)
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setLoading(true)
+
+  // 1. Определяем метод и URL
+  const method = editing ? "PATCH" : "POST"
+  const url = editing ? `/api/teachers/${editing.id}` : "/api/teachers"
+
+  // 2. Удаляем id из form, чтобы PATCH не упал
+ const { id, teacherSubjects: _ts, ...safeForm } = form
+
+
+  // 3. Отправляем данные преподавателя
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(safeForm)
+  })
+
+  const data = await res.json()
+
+  // 4. Проверка: был ли успешный ответ и вернулся ли id
+  if (!res.ok || !data?.id) {
+    console.error("Ошибка при обновлении преподавателя:", data)
+    alert("Ошибка при сохранении преподавателя")
+    setLoading(false)
+    return
+  }
+
+  const teacherId = data.id
+  console.log("Сохранён преподаватель:", data)
+  console.log("teacherId для связей:", teacherId)
+
+  // 5. Удаляем старые связи (если редактируем)
+  if (editing) {
+    const prev = await fetch(`/api/teacher-subjects?teacherId=${teacherId}`).then(r => r.json())
+    for (const ts of prev) {
+      await fetch(`/api/teacher-subjects/${ts.id}`, { method: "DELETE" })
+    }
+  }
+
+  // 6. Добавляем новые связи
+  await Promise.all(teacherSubjects.map(ts => {
+    const payload = {
+      teacherId,
+      subjectId: ts.subjectId,
+      price: Number(ts.price),
+      duration: Number(ts.duration)
+    }
+    console.log("Отправка связи teacher-subject:", payload)
+    return fetch("/api/teacher-subjects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+  }))
+
+  // 7. Обновляем список и сбрасываем форму
+  setTeachers(await fetch("/api/teachers").then(r => r.json()))
+  startNew()
+  setLoading(false)
+}
+
+
+  // Удалить преподавателя
+  const deleteTeacher = async (id: string) => {
+    setLoading(true)
+    await fetch(`/api/teachers/${id}`, { method: "DELETE" })
+    setTeachers(prev => prev.filter(t => t.id !== id))
+    setLoading(false)
+    if (editing && editing.id === id) startNew()
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto py-10">
+      <Link href="/admin" className="inline-block mb-4 text-blue-700 hover:underline">
+        ← Назад в админ‑панель
+      </Link>
+      <h1 className="text-2xl font-bold mb-6">Преподаватели</h1>
+      <form onSubmit={handleSubmit} className="space-y-3 border p-4 rounded-xl mb-10">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={form.firstName}
+            onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+            placeholder="Имя"
+            required className="input flex-1"
+          />
+          <input
+            type="text"
+            value={form.lastName}
+            onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+            placeholder="Фамилия"
+            className="input flex-1"
+          />
+        </div>
+        <input
+          type="text"
+          value={form.aboutShort ?? ""}
+          onChange={e => setForm(f => ({ ...f, aboutShort: e.target.value }))}
+          placeholder="Описание (коротко)"
+          className="input w-full"
+        />
+        <input
+          type="text"
+          value={form.education ?? ""}
+          onChange={e => setForm(f => ({ ...f, education: e.target.value }))}
+          placeholder="Образование"
+          className="input w-full"
+        />
+        <div>
+          <label className="font-medium">Предметы:</label>
+          <div className="flex flex-wrap gap-3">
+            {subjects.map(subject => {
+              const checked = teacherSubjects.some(ts => ts.subjectId === subject.id)
+              return (
+                <label key={subject.id} className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={e => handleSubjectChange(subject.id, e.target.checked)}
+                  />
+                  {subject.name}
+                  {checked && (
+                    <>
+                      <input
+                        type="number"
+                        value={teacherSubjects.find(ts => ts.subjectId === subject.id)?.price ?? ""}
+                        onChange={e => updateTS(subject.id, "price", e.target.value)}
+                        placeholder="Цена"
+                        className="input w-16 ml-2"
+                      />
+                      <input
+                        type="number"
+                        value={teacherSubjects.find(ts => ts.subjectId === subject.id)?.duration ?? ""}
+                        onChange={e => updateTS(subject.id, "duration", e.target.value)}
+                        placeholder="Мин"
+                        className="input w-12 ml-1"
+                      />
+                    </>
+                  )}
+                </label>
+              )
+            })}
+          </div>
+        </div>
+        <button className="bg-blue-600 text-white px-4 py-1 rounded" disabled={loading}>
+          {editing ? "Сохранить изменения" : "Добавить"}
+        </button>
+        {editing && (
+          <button type="button" className="ml-4 underline" onClick={startNew}>
+            Отмена
+          </button>
+        )}
+      </form>
+      <h2 className="text-lg font-bold mb-3">Список преподавателей</h2>
+      <ul>
+        {teachers.map(teacher => (
+          <li key={teacher.id} className="flex justify-between items-center border-b py-2">
+            <span>
+              <b>{teacher.firstName} {teacher.lastName}</b>
+              {teacher.aboutShort ? ` — ${teacher.aboutShort}` : ""}
+              {teacher.education ? ` / ${teacher.education}` : ""}
+            </span>
+            <span>
+              <button
+                className="text-blue-600 mr-2 hover:underline"
+                onClick={() => startEdit(teacher)}
+                disabled={loading}
+              >
+                Редактировать
+              </button>
+              <button
+                className="text-red-500 hover:underline"
+                onClick={() => deleteTeacher(teacher.id)}
+                disabled={loading}
+              >
+                Удалить
+              </button>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
