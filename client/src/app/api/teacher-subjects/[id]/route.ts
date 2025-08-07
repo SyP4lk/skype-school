@@ -1,10 +1,18 @@
+// src/app/api/teacher-subjects/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
-  const res = await fetch(`${API_URL}/teacher-subjects/${id}`, { method: "DELETE" });
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const id = params.id;
+
+  const res = await fetch(`${API_URL}/teacher-subjects/${id}`, {
+    method: "DELETE",
+  });
 
   if (!res.ok) {
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
@@ -13,8 +21,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   return NextResponse.json({ ok: true });
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const id = params.id;
   const body = await req.json();
 
   const res = await fetch(`${API_URL}/teacher-subjects/${id}`, {
