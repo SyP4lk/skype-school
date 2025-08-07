@@ -1,0 +1,42 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next/
+out/
+
+# VS Code
+.vscode/
+
+# Environment files
+.env
+.env.*
+
+# Prisma
+prisma/dev.db
+prisma/dev.db-journal
+
+# Docker volumes
+db_data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Build
+dist/
+build/
+
+# Optional lock files (если не используешь конкретно)
+package-lock.json
+yarn.lock
+
+# Static uploads (если будут)
+public/uploads
