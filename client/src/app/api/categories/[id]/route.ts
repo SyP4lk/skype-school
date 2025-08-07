@@ -2,11 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const res = await fetch(`${API_URL}/${params.id}`);
+export async function GET(req: NextRequest, context: any) {
+  const { id } = context.params;
+  const res = await fetch(`${API_URL}/${id}`);
   if (!res.ok) {
     return NextResponse.json({ error: "Not found" }, { status: res.status });
   }
@@ -15,11 +13,9 @@ export async function GET(
   return NextResponse.json(data);
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const res = await fetch(`${API_URL}/${params.id}`, { method: "DELETE" });
+export async function DELETE(req: NextRequest, context: any) {
+  const { id } = context.params;
+  const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
   if (!res.ok) {
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
