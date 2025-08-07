@@ -1,7 +1,7 @@
 // client/src/app/api/teachers/[id]/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
-const API_URL = "http://localhost:3000/teachers";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function GET(
   req: NextRequest,
