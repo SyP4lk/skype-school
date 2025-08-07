@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/subjects";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
-
-  const res = await fetch(`${API_URL}/${id}`, {
-    method: "DELETE",
-  });
-
+export async function DELETE(req: NextRequest, context: any) {
+  const { id } = context.params;
+  const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
   if (!res.ok) {
-    return NextResponse.json({ error: "Failed to delete subject" }, { status: res.status });
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
+}
+
+export async function PATCH(req: NextRequest, context: any) {
+  const { id } = context.params;
+  const body = await req.json();
+  const res = await fetch(`${API_URL}/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  return NextResponse.json(await res.json());
 }
