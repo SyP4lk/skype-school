@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+// client/src/app/api/categories/[id]/route.ts
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL
-  ? `${process.env.NEXT_PUBLIC_API_URL}/categories`
-  : "http://localhost:3000/categories";
+import { NextRequest, NextResponse } from "next/server";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function GET(
   req: NextRequest,
