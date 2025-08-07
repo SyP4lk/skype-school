@@ -1,7 +1,7 @@
 // client/src/app/api/categories/route.ts
 import { NextRequest, NextResponse } from "next/server"
 
-const API_URL = "http://localhost:3000/categories"
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // GET /api/categories → /categories на backend
 export async function GET() {
