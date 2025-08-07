@@ -28,36 +28,32 @@ export default function CategoryPage() {
   const [loading, setLoading] = useState(false)
   const [categoryName, setCategoryName] = useState("")
 
-  // Загружаем предметы и название категории
   useEffect(() => {
     fetch(`/api/categories/${categoryId}`)
       .then(r => r.ok ? r.json() : null)
       .then(cat => {
         setCategoryName(cat?.name || "")
-        setSubjects(cat?.subjects || [])
+        setSubjects(Array.isArray(cat?.subjects) ? cat.subjects : [])
       })
   }, [categoryId])
 
-  // Загружаем преподавателей по категории и (опционально) предмету
   useEffect(() => {
     setLoading(true)
     let url = `/api/teachers?categoryId=${categoryId}`
     if (subjectId) url += `&subjectId=${subjectId}`
     fetch(url)
-      .then(r => r.json())
-      .then(setTeachers)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setTeachers(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false))
   }, [categoryId, subjectId])
 
-  // Фильтруем только тех преподавателей, у которых есть хотя бы одна подходящая связь!
-  const filteredTeachers = teachers.filter(teacher =>
-    teacher.teacherSubjects?.some(ts =>
-      // 1. Всегда проверяем категорию
-      ts.subject?.categoryId === categoryId &&
-      // 2. Если выбран предмет — фильтруем и по нему
+  const filteredTeachers = Array.isArray(teachers) ? teachers.filter(teacher =>
+    Array.isArray(teacher.teacherSubjects) &&
+    teacher.teacherSubjects.some(ts =>
+      ts?.subject?.categoryId === categoryId &&
       (!subjectId || ts.subjectId === subjectId)
     )
-  )
+  ) : []
 
   return (
     <div className="max-w-6xl mx-auto py-8">
@@ -80,11 +76,12 @@ export default function CategoryPage() {
           className="border px-3 py-2 rounded"
         >
           <option value="">Все предметы</option>
-          {subjects.map(subj => (
+          {Array.isArray(subjects) && subjects.map(subj => (
             <option key={subj.id} value={subj.id}>{subj.name}</option>
           ))}
         </select>
       </div>
+
       {/* Список преподавателей */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {loading ? (
@@ -100,9 +97,9 @@ export default function CategoryPage() {
                   <div className="text-lg font-semibold">{teacher.firstName} {teacher.lastName}</div>
                   <div className="text-gray-500 text-sm">{teacher.aboutShort}</div>
                   <div className="mt-2 text-sm text-blue-800">
-                    {teacher.teacherSubjects && teacher.teacherSubjects
+                    {Array.isArray(teacher.teacherSubjects) && teacher.teacherSubjects
                       .filter(ts =>
-                        ts.subject?.categoryId === categoryId &&
+                        ts?.subject?.categoryId === categoryId &&
                         (!subjectId || ts.subjectId === subjectId)
                       )
                       .map(ts => (
