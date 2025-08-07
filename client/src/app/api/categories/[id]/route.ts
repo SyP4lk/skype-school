@@ -1,15 +1,12 @@
-// client/src/app/api/categories/[id]/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
+  _req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params;
-
-  const res = await fetch(`${API_URL}/${id}`);
+  const res = await fetch(`${API_URL}/${params.id}`);
   if (!res.ok) {
     return NextResponse.json({ error: "Not found" }, { status: res.status });
   }
@@ -19,12 +16,10 @@ export async function GET(
 }
 
 export async function DELETE(
-  req: NextRequest,
-  context: { params: { id: string } }
+  _req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params;
-
-  const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${API_URL}/${params.id}`, { method: "DELETE" });
   if (!res.ok) {
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
