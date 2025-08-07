@@ -63,31 +63,33 @@ export default function TeachersAdminPage() {
     )
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setLoading(true)
 
-    const method = editing ? "PATCH" : "POST"
-    const url = editing ? `/api/teachers/${editing.id}` : "/api/teachers"
+  const method = editing ? "PATCH" : "POST"
+  const url = editing ? `/api/teachers/${editing.id}` : "/api/teachers"
 
-    const { id, teacherSubjects: _ts, ...safeForm } = form
+  const { id, ...safeForm } = form
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(safeForm),
-    })
+  const res = await fetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(safeForm),
+  })
 
-    const data = await res.json()
+  const data = await res.json()
 
-    if (!res.ok || !data?.id) {
-      console.error("Ошибка при обновлении преподавателя:", data)
-      alert("Ошибка при сохранении преподавателя")
-      setLoading(false)
-      return
-    }
+  if (!res.ok || !data?.id) {
+    console.error("Ошибка при обновлении преподавателя:", data)
+    alert("Ошибка при сохранении преподавателя")
+    setLoading(false)
+    return
+  }
 
-    const teacherId = data.id
+  const teacherId = data.id
+  // и так далее...
+
 
     if (editing) {
       const prev = await fetch(`/api/teacher-subjects?teacherId=${teacherId}`).then(r => r.json())
