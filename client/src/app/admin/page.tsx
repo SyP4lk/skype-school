@@ -1,4 +1,3 @@
-// client/src/app/admin/page.tsx
 "use client"
 
 import Link from "next/link"
@@ -17,7 +16,7 @@ export default function AdminHome() {
     <div className="max-w-2xl mx-auto py-12">
       <h1 className="text-3xl font-bold mb-8">Админ‑панель</h1>
       <div className="grid gap-6">
-        {sections.map(sec => (
+        {Array.isArray(sections) && sections.map(sec => (
           <Link
             href={sec.href}
             key={sec.href}
