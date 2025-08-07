@@ -10,30 +10,53 @@ export default function SubjectsAdminPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("/api/subjects").then(res => res.json()).then(setSubjects);
-    fetch("/api/categories").then(res => res.json()).then(setCategories);
+    fetch("/api/subjects")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setSubjects(data)
+        else console.error("Ошибка загрузки subjects:", data)
+      })
+      .catch(err => console.error("Ошибка запроса subjects:", err));
+
+    fetch("/api/categories")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setCategories(data)
+        else console.error("Ошибка загрузки categories:", data)
+      })
+      .catch(err => console.error("Ошибка запроса categories:", err));
   }, []);
 
   const addSubject = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const res = await fetch("/api/subjects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, categoryId }),
-    });
-    const subj = await res.json();
-    setSubjects(prev => [...prev, subj]);
-    setName("");
-    setCategoryId("");
-    setLoading(false);
+    try {
+      const res = await fetch("/api/subjects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, categoryId }),
+      });
+      const subj = await res.json();
+      setSubjects(prev => [...prev, subj]);
+      setName("");
+      setCategoryId("");
+    } catch (err) {
+      console.error("Ошибка добавления предмета:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const deleteSubject = async (id: string) => {
     setLoading(true);
-    await fetch(`/api/subjects/${id}`, { method: "DELETE" });
-    setSubjects(prev => prev.filter((c: any) => c.id !== id));
-    setLoading(false);
+    try {
+      await fetch(`/api/subjects/${id}`, { method: "DELETE" });
+      setSubjects(prev => prev.filter((c: any) => c.id !== id));
+    } catch (err) {
+      console.error("Ошибка удаления предмета:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,6 +65,7 @@ export default function SubjectsAdminPage() {
         ← Назад в админ‑панель
       </Link>
       <h1 className="text-2xl font-bold mb-6">Предметы</h1>
+
       <form onSubmit={addSubject} className="flex gap-2 mb-6">
         <input
           type="text"
@@ -58,7 +82,7 @@ export default function SubjectsAdminPage() {
           required
         >
           <option value="">Выберите категорию</option>
-          {categories.map(cat => (
+          {Array.isArray(categories) && categories.map(cat => (
             <option key={cat.id} value={cat.id}>{cat.name}</option>
           ))}
         </select>
@@ -66,8 +90,9 @@ export default function SubjectsAdminPage() {
           Добавить
         </button>
       </form>
+
       <ul>
-        {subjects.map(subj => (
+        {Array.isArray(subjects) && subjects.map(subj => (
           <li key={subj.id} className="flex justify-between items-center border-b py-2">
             <span>
               {subj.name}{" "}
