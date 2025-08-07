@@ -1,4 +1,5 @@
 "use client"
+
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
@@ -6,15 +7,34 @@ type Category = { id: string; name: string }
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([])
+  const [error, setError] = useState(false)
 
   useEffect(() => {
-    fetch("/api/categories").then(res => res.json()).then(setCategories)
+    fetch("/api/categories")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCategories(data)
+        } else {
+          console.error("Ожидался массив, но получено:", data)
+          setError(true)
+        }
+      })
+      .catch(err => {
+        console.error("Ошибка при загрузке категорий:", err)
+        setError(true)
+      })
   }, [])
 
-  // Заглушка для иконок (замени на свои svg или эмодзи)
-  const icons = [
-    "🌎", "📚", "📝", "🧪", "🎓", "♟️", "🗣️", "🎨", "🇨🇳", "🇸🇪", "💻"
-  ]
+  const icons = ["🌎", "📚", "📝", "🧪", "🎓", "♟️", "🗣️", "🎨", "🇨🇳", "🇸🇪", "💻"]
+
+  if (error) {
+    return (
+      <div className="text-center py-10 text-red-600">
+        Не удалось загрузить категории. Пожалуйста, попробуйте позже.
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-5xl mx-auto py-8">
