@@ -2,14 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-type Context = {
-  params: {
-    id: string;
-  };
-};
-
-export async function DELETE(req: NextRequest, context: Context) {
-  const { id } = context.params;
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
 
   const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
 
@@ -20,8 +17,11 @@ export async function DELETE(req: NextRequest, context: Context) {
   return NextResponse.json({ ok: true });
 }
 
-export async function PATCH(req: NextRequest, context: Context) {
-  const { id } = context.params;
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params;
   const body = await req.json();
 
   const res = await fetch(`${API_URL}/${id}`, {
