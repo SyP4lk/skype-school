@@ -4,7 +4,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const { id } = params;
-  const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+  const res = await fetch(`${API_URL}/teacher-subjects/${id}`, { method: "DELETE" });
 
   if (!res.ok) {
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { id } = params;
   const body = await req.json();
 
-  const res = await fetch(`${API_URL}/${id}`, {
+  const res = await fetch(`${API_URL}/teacher-subjects/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
