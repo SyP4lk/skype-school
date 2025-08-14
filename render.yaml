@@ -1,25 +1,27 @@
 services:
   - type: web
     name: skype-school-server
-    env: docker
-    repo: https://github.com/SyP4lk/skype-school
-    dockerContext: .
-    dockerfilePath: server/Dockerfile
-    buildCommand: |
-      npm install
-      npx prisma generate
-      npx prisma migrate deploy
-    startCommand: npm run start:prod
+    env: node
+    nodeVersion: 20
+    rootDir: server
+    buildCommand: npm ci && npm run build
+    startCommand: npx prisma migrate deploy && node dist/main.js
     envVars:
       - key: DATABASE_URL
-        sync: false  # ты подставишь вручную в Render интерфейсе
-
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ALLOWED_ORIGINS
+        value: https://skype-school-client.onrender.com
   - type: web
     name: skype-school-client
-    env: static
-    repo: https://github.com/SyP4lk/skype-school
-    buildCommand: npm install && npm run build
-    staticPublishPath: client/out
+    env: node
+    nodeVersion: 20
+    rootDir: client
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        value: https://skype-school-server.onrender.com
+        value: https://skype-school-server.onrender.com/api
